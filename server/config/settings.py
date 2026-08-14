@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'apps.accounts',
     'apps.profiles',
+    'apps.resumes',
 ]
 
 MIDDLEWARE = [
@@ -116,6 +117,10 @@ REST_FRAMEWORK = {
     ],
 }
 
+# Resume Analyzer Configuration
+import os
+RESUME_ANALYZER_URL = os.getenv('RESUME_ANALYZER_URL', 'http://localhost:8001')
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
@@ -134,6 +139,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# File upload settings
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration

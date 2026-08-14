@@ -10,6 +10,48 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U techlens_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  analyzer:
+    build:
+      context: ./Resume-Analyzer
+      dockerfile: Dockerfile
+    container_name: techlens-analyzer
+    command: python main.py
+    ports:
+      - "8001:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - postgres
+    volumes:
+      - ./Resume-Analyzer:/app
+
+  django:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: techlens-django
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./server:/app
+      - media_files:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: "True"
+      DATABASE_URL: "postgresql://techlens_user:techlens_password@postgres:5432/techlens_db"
+      RESUME_ANALYZER_URL: "http://analyzer:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      analyzer:
+        condition: service_started
 
 volumes:
   postgres_data:
+  media_files:
