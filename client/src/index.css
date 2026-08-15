@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-body;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display text-ink;
+  }
+
+  /* Visible keyboard focus everywhere, never rely on color alone */
+  :focus-visible {
+    outline: 2px solid theme('colors.primary.DEFAULT');
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .eyebrow {
+    @apply flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-ink-muted;
+  }
+
+  .eyebrow::before {
+    content: '';
+    @apply block h-2.5 w-[3px] rounded-full bg-primary;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
