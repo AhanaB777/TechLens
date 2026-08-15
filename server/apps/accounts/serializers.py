@@ -1,5 +1,4 @@
 from rest_framework import serializers
-
 from .models import User
 
 
@@ -8,7 +7,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone_number', 'password')
+        fields = ('id', 'name', 'email', 'password') # Only fields your model has
 
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
@@ -18,5 +17,5 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'first_name', 'last_name', 'phone_number')
+        fields = ('id', 'name', 'email') # Only fields your model has
         read_only_fields = fields
