@@ -1,6 +1,8 @@
 ﻿asgiref==3.12.1
 Django==6.1
 djangorestframework==3.18.0
+django-cors-headers>=4.4.0
+dj-database-url>=2.2.0
 psycopg==3.3.4
 psycopg-binary==3.3.4
 python-dotenv==1.2.2

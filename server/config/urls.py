@@ -21,10 +21,25 @@ from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # Accounts
     path('api/accounts/', include('apps.accounts.urls')),
+
+    # Profile
     path('api/profiles/', include('apps.profiles.urls')),
+
+    # Resume
     path('api/resumes/', include('apps.resumes.urls')),
+
+    # Assessment
+    path('api/assessments/', include('apps.assessments.urls')),
+
+    # Competency
+    path('api/competencies/', include('apps.competencies.urls')),
 ]
 
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )

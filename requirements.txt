@@ -1,0 +1,4 @@
+# Root project requirements for local developer convenience.
+# Include the Django app dependencies so a single install works for most contributors.
+
+-r ./server/requirements.txt
