@@ -26,7 +26,7 @@ def make_pool(skill, difficulty='beginner', num_questions=3, correct_prefix='ans
 
 class SkillSelectionAndCooldownTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='alice', email='alice@example.com', password='testpass123')
+        self.user = User.objects.create_user(email='alice@example.com', password='testpass123', name='Alice')
         self.python = Skill.objects.create(name='Python', slug='python')
         self.sql = Skill.objects.create(name='SQL', slug='sql')
         make_pool(self.python)
@@ -67,7 +67,7 @@ class SkillSelectionAndCooldownTests(TestCase):
 
 class BuildAndGradeAttemptTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='bob', email='bob@example.com', password='testpass123')
+        self.user = User.objects.create_user(email='bob@example.com', password='testpass123', name='Bob')
         self.python = Skill.objects.create(name='Python', slug='python')
         self.sql = Skill.objects.create(name='SQL', slug='sql')
         self.python_pool, self.python_questions = make_pool(self.python, num_questions=2, correct_prefix='py')
@@ -127,7 +127,7 @@ class BuildAndGradeAttemptTests(TestCase):
 
 class AssessmentAPITests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='carol', email='carol@example.com', password='testpass123')
+        self.user = User.objects.create_user(email='carol@example.com', password='testpass123', name='Carol')
         self.skill = Skill.objects.create(name='Testing', slug='testing')
         self.pool, self.questions = make_pool(self.skill, num_questions=2, correct_prefix='t')
         self.client.force_authenticate(self.user)

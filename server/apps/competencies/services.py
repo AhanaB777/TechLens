@@ -164,27 +164,32 @@ def get_user_competency_scores(user):
 VERIFIED_CONFIDENCE_THRESHOLD = 0.5
 
 
-def get_career_requirements(user):
+def get_career_requirements(user, career=None):
     """
     Integration seam into the (not-yet-built) `careers` app.
 
-    Expected shape once it exists: a CareerSkillRequirement model with
+    If `career` is passed explicitly, requirements are resolved for THAT
+    career (lets a student compare readiness against any career, not just
+    their currently-set profile goal). If omitted, falls back to the
+    user's profile.career_goal, matching prior single-goal behavior.
+
+    Expected shape once `careers` exists: a CareerSkillRequirement model with
     `career`, `skill`, `importance` (0-1), and `target_level` (0-100)
-    fields, resolved against the user's selected career goal (likely
-    reached via profiles). Returns {} gracefully until that's wired up,
-    so competencies/assessments aren't blocked waiting on it.
+    fields. Returns {} gracefully until that's wired up, so competencies/
+    assessments aren't blocked waiting on it.
 
     Returns: {skill_id: {'importance': float, 'target_level': float}}
     """
     try:
         from apps.careers.models import CareerSkillRequirement  # noqa
 
-        profile = getattr(user, 'profile', None)
-        career_goal = getattr(profile, 'career_goal', None) if profile else None
-        if not career_goal:
+        if career is None:
+            profile = getattr(user, 'profile', None)
+            career = getattr(profile, 'career_goal', None) if profile else None
+        if not career:
             return {}
 
-        requirements = CareerSkillRequirement.objects.filter(career=career_goal).select_related('skill')
+        requirements = CareerSkillRequirement.objects.filter(career=career).select_related('skill')
         return {
             r.skill_id: {
                 'importance': getattr(r, 'importance', 0.5),
@@ -196,15 +201,20 @@ def get_career_requirements(user):
         return {}
 
 
-def calculate_career_readiness(user):
+def calculate_career_readiness(user, career=None):
     """
     readiness = weighted current competency / weighted target competency x 100
 
+    Pass `career` explicitly to calculate readiness against a specific
+    career (e.g. for a "compare readiness across career paths" view).
+    Omit it to use the user's current profile.career_goal, matching prior
+    single-goal behavior.
+
     Explainable weighted competency coverage - never presented as a
-    mysterious AI prediction. Returns None if the user has no career goal
-    / requirements wired up yet (rather than a misleading 0%).
+    mysterious AI prediction. Returns None if there's no career to
+    evaluate against (rather than a misleading 0%).
     """
-    requirements = get_career_requirements(user)
+    requirements = get_career_requirements(user, career=career)
     if not requirements:
         return None
 

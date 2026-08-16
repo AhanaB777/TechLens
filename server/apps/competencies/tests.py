@@ -11,7 +11,7 @@ User = get_user_model()
 
 class CompetencyEngineServiceTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='alice', email='alice@example.com', password='testpass123')
+        self.user = User.objects.create_user(email='alice@example.com', password='testpass123', name='Alice')
         self.skill = Skill.objects.create(name='Python', slug='python')
         EvidenceWeightConfig.objects.filter(is_active=True).update(is_active=False)
         self.config = EvidenceWeightConfig.objects.create(
@@ -57,7 +57,7 @@ class CompetencyEngineServiceTests(TestCase):
 
 class CompetencyAPITests(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='bob', email='bob@example.com', password='testpass123')
+        self.user = User.objects.create_user(email='bob@example.com', password='testpass123', name='Bob')
         self.skill = Skill.objects.create(name='SQL', slug='sql')
         self.client.force_authenticate(self.user)
 
@@ -103,7 +103,7 @@ class CompetencyAPITests(APITestCase):
 
 class CareerReadinessAndVerificationTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='erin', email='erin@example.com', password='testpass123')
+        self.user = User.objects.create_user(email='erin@example.com', password='testpass123', name='Erin')
         self.skill = Skill.objects.create(name='Docker', slug='docker')
 
     def test_readiness_returns_none_with_no_requirements(self):
