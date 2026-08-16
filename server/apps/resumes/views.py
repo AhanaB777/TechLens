@@ -22,6 +22,15 @@ class ResumeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        """Create + analyze the resume, and return the full record so the
+        frontend immediately has extraction results."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        resume = serializer.save(user=request.user)
+        response_serializer = ResumeSerializer(resume, context=self.get_serializer_context())
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def set_primary(self, request, pk=None):
         """Set this resume as the primary resume for the user."""

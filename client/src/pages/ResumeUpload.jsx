@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { uploadResume } from '../services/resumeApi.js';
 
 function ResumeUpload() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [result, setResult] = useState(null);
   const navigate = useNavigate();
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
+    setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -15,16 +19,18 @@ function ResumeUpload() {
     if (!file) return alert("Please upload your resume first");
 
     setLoading(true);
-    const formData = new FormData();
-    formData.append('resume', file);
-
-    // TODO: await fetch('/api/resumes/', {method: 'POST', body: formData})
-
-    setTimeout(() => {
+    setError('');
+    try {
+      const resume = await uploadResume(file);
+      setResult(resume);
+    } catch (err) {
+      setError(err.message || "Upload failed. Is the server running?");
+    } finally {
       setLoading(false);
-      navigate('/dashboard');
-    }, 1500);
+    }
   };
+
+  const extractionFailed = result && result.extraction_status === 'failed';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#F1F5F9] to-[#E2E8F0] flex items-center justify-center p-4">
@@ -42,7 +48,7 @@ function ResumeUpload() {
         </div>
 
         <h2 className="text-2xl font-bold text-blue-600 mb-2">Upload Your Resume</h2>
-        <p className="text-gray-600 mb-6">We'll use this to suggest skills & projects for you</p>
+        <p className="text-gray-600 mb-6">We'll analyze it and extract your skills for your TechLens profile</p>
 
         <form onSubmit={handleSubmit} className="space-y-5">
 
@@ -54,11 +60,11 @@ function ResumeUpload() {
             <input
               id="resumeInput"
               type="file"
-              accept=".pdf,.doc,.docx"
+              accept=".pdf,.doc,.docx,.txt"
               onChange={handleFileChange}
               className="hidden"
             />
-            {file? (
+            {file ? (
               <div>
                 <p className="text-blue-600 font-semibold">📄 {file.name}</p>
                 <p className="text-gray-500 text-sm">Click to change file</p>
@@ -71,14 +77,64 @@ function ResumeUpload() {
             )}
           </div>
 
-          {/* Blue Button only */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading? 'Analyzing...' : 'Continue to Dashboard'}
-          </button>
+          {error && (
+            <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {!result && (
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Analyzing your resume...' : 'Upload & Analyze'}
+            </button>
+          )}
+
+          {result && !extractionFailed && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
+              <p className="text-green-700 font-semibold">
+                ✅ Analysis complete — {result.extracted_skills?.length ?? 0} skills found
+              </p>
+              <p className="text-gray-600 text-sm">
+                Your profile now includes your extracted skills and tech stack.
+              </p>
+              <div className="flex flex-col gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => navigate('/profile')}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition"
+                >
+                  View My Extracted Profile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold py-3 px-4 rounded-lg transition"
+                >
+                  Continue to Dashboard
+                </button>
+              </div>
+            </div>
+          )}
+
+          {extractionFailed && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-2">
+              <p className="text-yellow-700 font-semibold">⚠️ Analysis could not extract skills</p>
+              <p className="text-gray-600 text-sm">
+                {result.extraction_error || "We couldn't read your resume. Try a text-based PDF or DOCX."}
+              </p>
+              <button
+                type="button"
+                onClick={() => { setResult(null); setFile(null); }}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition"
+              >
+                Try Another File
+              </button>
+            </div>
+          )}
 
         </form>
       </div>

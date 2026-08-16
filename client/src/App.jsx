@@ -4,6 +4,7 @@ import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Onboarding from './pages/Onboarding.jsx'
 import ResumeUpload from './pages/ResumeUpload.jsx'
+import Profile from './pages/Profile.jsx'
 import DashboardLayout from './layouts/DashboardLayout.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import CareerGoal from './pages/CareerGoal.jsx'
@@ -26,6 +27,7 @@ export default function App() {
       {/* Main TechLens application */}
       <Route element={<DashboardLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/career-goal" element={<CareerGoal />} />
         <Route path="/competency-profile" element={<CompetencyProfile />} />
         <Route path="/skill-gaps" element={<SkillGaps />} />

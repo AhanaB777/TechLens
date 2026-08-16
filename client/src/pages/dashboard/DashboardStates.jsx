@@ -69,9 +69,10 @@ export function DashboardEmptyState() {
           </div>
         ))}
       </div>
-      <Button as={Link} to="/career-goal" className="mt-7">
-        Set your career goal
-      </Button>
+      <div className="mt-7 flex flex-wrap gap-3">
+        <Button as={Link} to="/resume-upload">Upload your resume</Button>
+        <Button as={Link} to="/career-goal" variant="secondary">Set your career goal</Button>
+      </div>
     </Card>
   )
 }

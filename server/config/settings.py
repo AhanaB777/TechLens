@@ -93,12 +93,20 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://techlens_user:techlens_password@localhost:5432/techlens_db',
-        conn_max_age=600,
-    )
-}
+# Use PostgreSQL via DATABASE_URL (docker-compose / production), otherwise
+# fall back to SQLite so the project runs out-of-the-box for local development.
+_database_url = os.getenv('DATABASE_URL')
+if _database_url:
+    DATABASES = {
+        'default': dj_database_url.parse(_database_url, conn_max_age=600),
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators

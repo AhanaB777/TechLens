@@ -1,0 +1,41 @@
+Rahul Sharma
+Backend Developer
+Email: rahul.sharma@example.com | Phone: +91 98765 43210
+
+SUMMARY
+Final-year Computer Science student passionate about building scalable backend
+systems. Strong foundation in Python and SQL with hands-on project experience
+in Django, FastAPI and PostgreSQL.
+
+SKILLS
+Programming: Python, Java, JavaScript, SQL, Bash
+Frameworks: Django, Flask, FastAPI, Node.js, Express
+Databases: PostgreSQL, MySQL, MongoDB, Redis
+DevOps: Docker, Git, GitHub, AWS, CI/CD
+Data: Machine Learning, Pandas, NumPy, Data Analysis
+Tools: Postman, Jupyter, Excel
+
+EXPERIENCE
+Backend Developer Intern - TechNova Solutions (May 2025 - Jul 2025)
+- Built REST APIs with Django REST Framework serving 50k+ daily requests
+- Optimized PostgreSQL queries, reducing API latency by 40%
+- Containerized microservices with Docker and deployed on AWS
+- Wrote unit tests and improved CI/CD pipeline with GitHub Actions
+
+PROJECTS
+1. E-Commerce API - Django + PostgreSQL + Redis
+   Designed product, cart and order microservices with JWT authentication.
+2. Resume Analyzer - FastAPI + NLP
+   Built skill extraction service using keyword matching and regex.
+
+EDUCATION
+B.Tech in Computer Science, ABC Institute of Technology (2022 - 2026)
+CGPA: 8.7/10
+
+CERTIFICATIONS
+- AWS Cloud Practitioner (2025)
+- Django Web Framework Certificate (2024)
+
+ACHIEVEMENTS
+- Led team of 4 in hackathon, won 2nd place for fintech prototype
+- Active contributor to open source projects on GitHub

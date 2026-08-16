@@ -28,6 +28,9 @@ urlpatterns = [
     # Career
     path('api/career/', include('apps.career.urls')),
 
+    # Competencies
+    path('api/competencies/', include('apps.competencies.urls')),
+
     # Profile
     path('api/profiles/', include('apps.profiles.urls')),
 

@@ -7,23 +7,24 @@
 
 const API_BASE = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8000/api'
 
-async function request(path, { method = 'GET', body, _retried = false } = {}) {
+async function request(path, { method = 'GET', body, formData, _retried = false } = {}) {
   const accessToken = localStorage.getItem('access')
 
-  const headers = { 'Content-Type': 'application/json' }
+  const headers = {}
   if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
+  if (!formData) headers['Content-Type'] = 'application/json'
 
   const response = await fetch(`${API_BASE}${path}`, {
     method,
     headers,
-    body: body ? JSON.stringify(body) : undefined,
+    body: formData ?? (body ? JSON.stringify(body) : undefined),
   })
 
   // Access token expired - try refreshing once, then retry the original request.
   if (response.status === 401 && !_retried) {
     const refreshed = await tryRefreshToken()
     if (refreshed) {
-      return request(path, { method, body, _retried: true })
+      return request(path, { method, body, formData, _retried: true })
     }
     // refresh failed too - force back to login
     localStorage.removeItem('access')
@@ -71,4 +72,6 @@ async function tryRefreshToken() {
 export const apiClient = {
   get: (path) => request(path, { method: 'GET' }),
   post: (path, body) => request(path, { method: 'POST', body }),
+  patch: (path, body) => request(path, { method: 'PATCH', body }),
+  postForm: (path, formData) => request(path, { method: 'POST', formData }),
 }

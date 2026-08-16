@@ -38,7 +38,7 @@ def process_resume_on_upload(sender, instance, created, **kwargs):
         instance.extracted_text = analysis_result.get('resume_text', '')
         instance.extracted_skills = analysis_result.get('skills', [])
         instance.extracted_tech_stack = analysis_result.get('tech_stack', [])
-        instance.extraction_error = analysis_result.get('error', '')
+        instance.extraction_error = analysis_result.get('error') or ''
         instance.save(update_fields=['extraction_status', 'extracted_text', 'extracted_skills', 
                                      'extracted_tech_stack', 'extraction_error'])
         

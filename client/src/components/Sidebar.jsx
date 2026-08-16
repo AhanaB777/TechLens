@@ -8,10 +8,12 @@ import {
   IconRoute,
   IconTrendUp,
   IconClose,
+  IconUser,
 } from './icons.jsx'
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: IconGrid },
+  { to: '/profile', label: 'My Profile', icon: IconUser },
   { to: '/career-goal', label: 'Career Goal', icon: IconTarget },
   { to: '/competency-profile', label: 'Competency Profile', icon: IconLayers },
   // { to: '/skill-gaps', label: 'Skill Gaps', icon: IconGap },
