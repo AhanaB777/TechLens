@@ -43,7 +43,13 @@ export default function ProfileHero({ profile }) {
         <StatBlock
           eyebrow="Career readiness"
           score={profile.readiness}
-          sublabel={`Your current competency profile is ${profile.readiness}% aligned with your ${profile.targetRole} goal.`}
+          sublabel={
+            profile.readiness == null
+              ? profile.targetRole
+                ? `Set up your ${profile.targetRole} requirements to see career readiness.`
+                : 'Set a career goal to see your readiness score.'
+              : `Your current competency profile is ${profile.readiness}% aligned with your ${profile.targetRole ?? 'career'} goal.`
+          }
         />
         <StatBlock
           eyebrow="Latest assessment"

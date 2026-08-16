@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import CompetencyScore, EvidenceWeightConfig, SelfAssessment, Skill
+from .models import CompetencyScore, CompetencyScoreHistory, EvidenceWeightConfig, SelfAssessment, Skill
 
 
 class SkillSerializer(serializers.ModelSerializer):
@@ -11,6 +11,7 @@ class SkillSerializer(serializers.ModelSerializer):
 
 class CompetencyScoreSerializer(serializers.ModelSerializer):
     skill = SkillSerializer(read_only=True)
+    evidence_counts = serializers.SerializerMethodField()
 
     class Meta:
         model = CompetencyScore
@@ -18,9 +19,27 @@ class CompetencyScoreSerializer(serializers.ModelSerializer):
             'id', 'skill', 'score', 'level', 'confidence',
             'assessment_component', 'project_component',
             'resume_component', 'self_assessment_component',
-            'updated_at',
+            'evidence_counts', 'updated_at',
         )
         read_only_fields = fields
+
+    def get_evidence_counts(self, obj):
+        from django.db.models import Count
+        from .models import EvidenceRecord
+
+        rows = (
+            EvidenceRecord.objects
+            .filter(user=obj.user, skill=obj.skill)
+            .values('source_type')
+            .annotate(count=Count('id'))
+        )
+        counts = {row['source_type']: row['count'] for row in rows}
+        return {
+            'assessments': counts.get(EvidenceRecord.SOURCE_ASSESSMENT, 0),
+            'projects': counts.get(EvidenceRecord.SOURCE_PROJECT, 0),
+            'resume': counts.get(EvidenceRecord.SOURCE_RESUME, 0),
+            'self_assessment': counts.get(EvidenceRecord.SOURCE_SELF, 0),
+        }
 
 
 class CompetencyExplainSerializer(serializers.Serializer):
@@ -63,6 +82,12 @@ class DashboardSerializer(serializers.Serializer):
     needs_verification = CountSerializer()
     strengths = SkillScoreItemSerializer(many=True)
     areas_to_improve = SkillScoreItemSerializer(many=True)
+
+
+class CompetencyScoreHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CompetencyScoreHistory
+        fields = ('score', 'confidence', 'recorded_at')
 
 
 class EvidenceWeightConfigSerializer(serializers.ModelSerializer):
