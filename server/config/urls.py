@@ -39,6 +39,9 @@ urlpatterns = [
 
     # Assessment
     path('api/assessments/', include('apps.assessments.urls')),
+    
+    # Progress  <- ADD THIS ONE LINE
+    path('api/progress/', include('apps.progress.urls')),
 ]
 
 if settings.DEBUG:

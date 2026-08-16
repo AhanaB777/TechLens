@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'apps.profiles',
     'apps.resumes',
     'apps.assessments',
+    'apps.progress'
 ]
 
 MIDDLEWARE = [
