@@ -42,7 +42,7 @@ def process_resume_on_upload(sender, instance, created, **kwargs):
         instance.save(update_fields=['extraction_status', 'extracted_text', 'extracted_skills', 
                                      'extracted_tech_stack', 'extraction_error'])
         
-        logger.info(f"Resume analysis completed for user {instance.user.username}: "
+        logger.info(f"Resume analysis completed for user {instance.user.email}: "
                    f"Status={analysis_result['status']}, "
                    f"Skills={len(analysis_result.get('skills', []))} found")
         
@@ -55,7 +55,7 @@ def process_resume_on_upload(sender, instance, created, **kwargs):
             profile.tech_stack = analysis_result.get('tech_stack', [])
             profile.save(update_fields=['skills', 'tech_stack'])
             
-            logger.info(f"Profile updated for user {instance.user.username} with "
+            logger.info(f"Profile updated for user {instance.user.email} with "
                        f"{len(analysis_result.get('skills', []))} skills")
     
     except Exception as e:

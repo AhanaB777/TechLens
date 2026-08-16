@@ -74,7 +74,7 @@ class CareerReadinessView(views.APIView):
         career_id = request.query_params.get('career_id')
         if career_id:
             try:
-                from apps.careers.models import Career  # noqa
+                from apps.career.models import Career  # noqa
                 career = Career.objects.filter(id=career_id).first()
             except Exception:
                 career = None

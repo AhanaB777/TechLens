@@ -166,35 +166,33 @@ VERIFIED_CONFIDENCE_THRESHOLD = 0.5
 
 def get_career_requirements(user, career=None):
     """
-    Integration seam into the (not-yet-built) `careers` app.
+    Integration seam into the `career` app (singular - matches the actual
+    app name, not `careers`).
 
     If `career` is passed explicitly, requirements are resolved for THAT
-    career (lets a student compare readiness against any career, not just
-    their currently-set profile goal). If omitted, falls back to the
-    user's profile.career_goal, matching prior single-goal behavior.
+    career. If omitted, uses the user's primary CareerGoal via
+    apps.career.services.get_primary_career_goal() - which already handles
+    "primary if set, else first goal" fallback logic, so we don't
+    reimplement it here.
 
-    Expected shape once `careers` exists: a CareerSkillRequirement model with
-    `career`, `skill`, `importance` (0-1), and `target_level` (0-100)
-    fields. Returns {} gracefully until that's wired up, so competencies/
-    assessments aren't blocked waiting on it.
+    Returns {} gracefully if the career app/data isn't available, so
+    competencies/assessments aren't blocked waiting on it.
 
     Returns: {skill_id: {'importance': float, 'target_level': float}}
     """
     try:
-        from apps.careers.models import CareerSkillRequirement  # noqa
+        from apps.career.models import CareerSkillRequirement
+        from apps.career.services import get_primary_career_goal
 
         if career is None:
-            profile = getattr(user, 'profile', None)
-            career = getattr(profile, 'career_goal', None) if profile else None
+            goal = get_primary_career_goal(user)
+            career = goal.career if goal else None
         if not career:
             return {}
 
         requirements = CareerSkillRequirement.objects.filter(career=career).select_related('skill')
         return {
-            r.skill_id: {
-                'importance': getattr(r, 'importance', 0.5),
-                'target_level': getattr(r, 'target_level', 70),
-            }
+            r.skill_id: {'importance': r.importance, 'target_level': r.target_level}
             for r in requirements
         }
     except Exception:
