@@ -25,6 +25,9 @@ urlpatterns = [
     # Accounts
     path('api/accounts/', include('apps.accounts.urls')),
 
+    # Career
+    path('api/career/', include('apps.career.urls')),
+
     # Profile
     path('api/profiles/', include('apps.profiles.urls')),
 
@@ -33,9 +36,6 @@ urlpatterns = [
 
     # Assessment
     path('api/assessments/', include('apps.assessments.urls')),
-
-    # Competency
-    path('api/competencies/', include('apps.competencies.urls')),
 ]
 
 if settings.DEBUG:

@@ -52,10 +52,11 @@ INSTALLED_APPS = [
 
     # TechLens apps
     'apps.accounts',
+    'apps.career',
+    'apps.competencies',
     'apps.profiles',
     'apps.resumes',
     'apps.assessments',
-    'apps.competencies',
 ]
 
 MIDDLEWARE = [
