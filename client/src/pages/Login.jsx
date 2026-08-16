@@ -2,20 +2,25 @@ import Card, { CardHeader } from '../components/Card'
 import Button from '../components/Button'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios' // better than fetch for error handling
+
+const API_URL = 'http://127.0.0.1:8000/api/accounts'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
   const validate = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
     if (!emailRegex.test(email)) return "Please enter a valid email address";
+    if (!password) return "Password is required";
     return "";
   }
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     const validationError = validate();
     if (validationError) {
@@ -23,9 +28,23 @@ export default function Login() {
       return;
     }
     setError('');
+    setLoading(true);
     
-    console.log("Logging in:", { email, password });
-    navigate('/dashboard')
+    try {
+      const res = await axios.post(`${API_URL}/login/`, { email, password });
+
+      localStorage.setItem('access', res.data.access);
+      localStorage.setItem('refresh', res.data.refresh);
+      console.log("Login Success:", res.data);
+      navigate('/dashboard')
+      
+    } catch (err) {
+      // Django returns error in err.response.data.detail
+      setError(err.response?.data?.detail || "Invalid email or password");
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -86,8 +105,9 @@ export default function Login() {
 
             <button 
               type="submit"
+              disabled={loading}
               style={{
-                background: '#4f46e5', 
+                background: loading ? '#9ca3af' : '#4f46e5', 
                 marginTop: '8px',
                 color: 'white',
                 border: 'none',
@@ -95,15 +115,15 @@ export default function Login() {
                 padding: '12px',
                 borderRadius: '8px',
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: loading ? 'not-allowed' : 'pointer',
                 fontSize: '16px'
               }}
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </form>
 
-          <div style={{display: 'flex', alignItems: 'center', gap: '16px', margin: '20px 0'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '16px', margin: '20px'}}>
             <div style={{flex: 1, height: '1px', background: '#e5e7eb'}}></div>
             <span style={{fontSize: '12px', color: '#9ca3af'}}>OR</span>
             <div style={{flex: 1, height: '1px', background: '#e5e7eb'}}></div>
