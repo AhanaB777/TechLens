@@ -3,15 +3,15 @@ services:
     image: postgres:17
     container_name: techlens-postgres
     environment:
-      POSTGRES_DB: techlens_db
-      POSTGRES_USER: techlens_user
-      POSTGRES_PASSWORD: techlens_password
+      POSTGRES_DB: ${POSTGRES_DB:-techlens_db}
+      POSTGRES_USER: ${POSTGRES_USER:-techlens_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-techlens_local_password}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U techlens_user"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -43,9 +43,15 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DEBUG: "True"
-      DATABASE_URL: "postgresql://techlens_user:techlens_password@postgres:5432/techlens_db"
-      RESUME_ANALYZER_URL: "http://analyzer:8000"
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+      DATABASE_URL: ${DATABASE_URL:-postgres://techlens_user:techlens_local_password@postgres:5432/techlens_db}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:5173}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      RESUME_ANALYZER_URL: http://analyzer:8000
     depends_on:
       postgres:
         condition: service_healthy

@@ -5,13 +5,15 @@
 // localStorage under 'access' / 'refresh'. No more session cookies or CSRF -
 // that was the old pattern before the backend switched to JWT-only auth.
 
-const API_BASE = import.meta.env?.VITE_API_BASE_URL || 'http://localhost:8000/api'
+const API_BASE = import.meta.env?.VITE_API_BASE_URL || `${window.location.protocol}//${window.location.hostname}:8000/api`
 
 async function request(path, { method = 'GET', body, formData, _retried = false } = {}) {
   const accessToken = localStorage.getItem('access')
 
   const headers = {}
-  if (accessToken) headers['Authorization'] = `Bearer ${accessToken}`
+  if (accessToken && !path.endsWith('/accounts/login/')) {
+    headers['Authorization'] = `Bearer ${accessToken}`
+  }
   if (!formData) headers['Content-Type'] = 'application/json'
 
   const response = await fetch(`${API_BASE}${path}`, {
@@ -21,7 +23,7 @@ async function request(path, { method = 'GET', body, formData, _retried = false 
   })
 
   // Access token expired - try refreshing once, then retry the original request.
-  if (response.status === 401 && !_retried) {
+  if (response.status === 401 && !_retried && !path.endsWith('/accounts/login/')) {
     const refreshed = await tryRefreshToken()
     if (refreshed) {
       return request(path, { method, body, formData, _retried: true })

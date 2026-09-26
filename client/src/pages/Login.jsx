@@ -2,9 +2,7 @@ import Card, { CardHeader } from '../components/Card'
 import Button from '../components/Button'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import axios from 'axios' // better than fetch for error handling
-
-const API_URL = 'http://127.0.0.1:8000/api/accounts'
+import { apiClient } from '../services/apiClient'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -31,17 +29,14 @@ export default function Login() {
     setLoading(true);
     
     try {
-      const res = await axios.post(`${API_URL}/login/`, { email, password });
+      const res = await apiClient.post('/accounts/login/', { email, password });
 
-      localStorage.setItem('access', res.data.access);
-      localStorage.setItem('refresh', res.data.refresh);
-      console.log("Login Success:", res.data);
+      localStorage.setItem('access', res.access);
+      localStorage.setItem('refresh', res.refresh);
       navigate('/dashboard')
       
     } catch (err) {
-      // Django returns error in err.response.data.detail
-      setError(err.response?.data?.detail || "Invalid email or password");
-      console.log(err);
+      setError(err.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }

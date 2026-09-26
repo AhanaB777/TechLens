@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 
 import dj_database_url
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,16 +23,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv(
-    'SECRET_KEY',
-    'django-insecure-78a%r&f*1k$tcm5h9x(n#^e1+*z#xc6_8b!w--$8y9vh9@^8mo'
-)
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').strip().lower() in {'1', 'true', 'yes', 'on'}
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,0.0.0.0').split(',')
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured('Set SECRET_KEY when DEBUG is disabled.')
+    SECRET_KEY = 'django-insecure-local-development-only'
+
+_allowed_hosts = os.getenv('ALLOWED_HOSTS')
+if _allowed_hosts is not None:
+    ALLOWED_HOSTS = [host.strip() for host in _allowed_hosts.split(',') if host.strip()]
+elif DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    raise ImproperlyConfigured('Set ALLOWED_HOSTS when DEBUG is disabled.')
+
+if not DEBUG and '*' in ALLOWED_HOSTS:
+    raise ImproperlyConfigured('ALLOWED_HOSTS must not contain * when DEBUG is disabled.')
 
 
 # Application definition
@@ -62,7 +71,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -94,20 +103,20 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-# Use PostgreSQL via DATABASE_URL (docker-compose / production), otherwise
-# fall back to SQLite so the project runs out-of-the-box for local development.
 _database_url = os.getenv('DATABASE_URL')
 if _database_url:
     DATABASES = {
         'default': dj_database_url.parse(_database_url, conn_max_age=600),
     }
-else:
+elif DEBUG:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+else:
+    raise ImproperlyConfigured('Set DATABASE_URL when DEBUG is disabled.')
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
@@ -138,15 +147,27 @@ REST_FRAMEWORK = {
     ],
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-]
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-]
-CORS_ALLOW_CREDENTIALS = True
+
+def _split_env_list(name, default=()):
+    value = os.getenv(name)
+    if value is None:
+        return list(default)
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = _split_env_list(
+    'CORS_ALLOWED_ORIGINS',
+    ('http://localhost:5173', 'http://localhost:3000') if DEBUG else (),
+)
+CSRF_TRUSTED_ORIGINS = _split_env_list(
+    'CSRF_TRUSTED_ORIGINS',
+    CORS_ALLOWED_ORIGINS,
+)
+CORS_ALLOW_CREDENTIALS = False
+
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 # Resume Analyzer Configuration
 RESUME_ANALYZER_URL = os.getenv('RESUME_ANALYZER_URL', 'http://localhost:8001')
@@ -179,9 +200,9 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
 
 # ================= EMAIL SETTINGS =================
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'noreplytechlens@gmail.com'
-EMAIL_HOST_PASSWORD = 'uytu bgoh ohgu nhbz' # your 16 digit app password
-DEFAULT_FROM_EMAIL = 'TechLens <noreplytechlens@gmail.com>'
+EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True').strip().lower() in {'1', 'true', 'yes', 'on'}
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'TechLens <noreply@techlens.app>')
