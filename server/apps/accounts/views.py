@@ -27,13 +27,16 @@ from rest_framework import status, permissions
 from django.core.mail import send_mail
 from django.conf import settings
 from.models import OTP
+import logging
+
+logger = logging.getLogger(__name__)
 
 def generate_otp():
     return str(random.randint(100000, 999999))
 
 
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny]) # <-- FIX 1: Make OTP public
+@permission_classes([permissions.AllowAny])
 def send_otp(request):
     email = request.data.get('email')
     if not email:
@@ -45,15 +48,15 @@ def send_otp(request):
     try:
         send_mail(
             'TechLens Verification OTP',
-            f'Your OTP is: {otp_code}. It expires in 5 minutes.',
-            settings.DEFAULT_FROM_EMAIL, # <-- FIX 2: Use this instead of MAILERS dict
+            f'Your verification code for TechLens is: {otp_code}. It expires in 5 minutes.',
+            settings.DEFAULT_FROM_EMAIL,
             [email],
             fail_silently=False,
         )
     except Exception as e:
         return Response({'error': f'Failed to send email: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    return Response({'message': 'OTP sent to your email'})
+    return Response({'message': f'OTP sent successfully to {email}'})
 
 
 @api_view(['POST'])

@@ -13,7 +13,7 @@ async function request(path, { method = 'GET', body, isFormData = false, _retrie
   if (accessToken && !path.endsWith('/accounts/login/')) {
     headers['Authorization'] = `Bearer ${accessToken}`
   }
-  if (!formData) headers['Content-Type'] = 'application/json'
+  if (!isFormData) headers['Content-Type'] = 'application/json' // <-- FIXED
 
   const response = await fetch(`${API_BASE}${path}`, {
     method,
