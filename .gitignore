@@ -7,8 +7,10 @@ __pycache__/
 venv/
 .venv/
 
-# Environment variables
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
 
 # SQLite
 db.sqlite3
@@ -29,3 +31,4 @@ Thumbs.db
 # Node
 node_modules/
 dist/
+.neon
