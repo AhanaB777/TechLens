@@ -183,7 +183,7 @@ export default function CareerGoal() {
         </div>
       )}
 
-      {!hasGoals ? (
+      {!hasGoals && !addingGoal ? (
         <Card className="p-8 text-center">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary">
             <IconTarget width={22} height={22} />

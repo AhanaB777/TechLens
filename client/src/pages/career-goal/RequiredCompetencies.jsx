@@ -8,6 +8,20 @@ const importanceStyles = {
 }
 
 export default function RequiredCompetencies({ role }) {
+
+  if (!role) {
+    return (
+      <Card className="p-5">
+        <CardHeader
+          eyebrow="Required competencies"
+          title="Set a career goal to see requirements"
+        />
+        <p className="text-sm text-ink-muted mt-2">
+          Once you save a career goal, its required skills and targets will show here.
+        </p>
+      </Card>
+    )
+  }
   return (
     <Card className="p-5">
       <CardHeader
@@ -34,9 +48,8 @@ export default function RequiredCompetencies({ role }) {
               </div>
             </div>
             <span
-              className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-medium ${
-                importanceStyles[competency.importance] ?? importanceStyles.Supporting
-              }`}
+              className={`shrink-0 rounded-full px-2 py-1 text-[11px] font-medium ${importanceStyles[competency.importance] ?? importanceStyles.Supporting
+                }`}
             >
               {competency.importance}
             </span>

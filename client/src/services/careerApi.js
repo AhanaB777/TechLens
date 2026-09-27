@@ -1,166 +1,84 @@
-import { careerRoles, getCareerRole } from '../data/careerRoles.js'
+// client/src/services/careerApi.js
+//
+// Real implementation, replacing the localStorage-only mock. Talks to
+// apps.career via /api/career/. Keeps the same exported function names
+// and shapes CareerGoalContext.jsx already expects, so the context itself
+// doesn't need changes.
 
-const STORAGE_KEY = 'techlens_career_goals'
-const LEGACY_STORAGE_KEY = 'techlens_career_goal'
-const SIMULATED_LATENCY_MS = 250
+import { apiClient } from './apiClient.js'
 
-const DEFAULT_GOAL = {
-  isSet: true,
-  level: 'Entry Level',
-  timeline: '6 months',
-}
-
-function normalizeGoal(goal, index = 0) {
-  const role = getCareerRole(goal?.role)
+function mapGoal(goal) {
   return {
-    id: goal?.id ?? `goal-${index + 1}`,
+    id: goal.id,
     isSet: true,
-    role: role.name,
-    level: goal?.level || DEFAULT_GOAL.level,
-    domain: role.domain,
-    timeline: goal?.timeline || DEFAULT_GOAL.timeline,
+    role: goal.role,
+    level: goal.level,
+    domain: goal.domain,
+    timeline: goal.timeline,
+    isPrimary: goal.is_primary,
   }
 }
 
-function readStoredGoals() {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed?.goals)) {
-        const goals = parsed.goals
-          .filter((goal) => goal?.role)
-          .slice(0, 2)
-          .map((goal, index) => normalizeGoal(goal, index))
-        if (goals.length) {
-          const activeGoalId = goals.some((goal) => goal.id === parsed.activeGoalId)
-            ? parsed.activeGoalId
-            : goals[0].id
-          return { goals, activeGoalId }
-        }
-      }
-    }
-
-    // Migrate the previous single-goal storage format automatically.
-    const legacyRaw = window.localStorage.getItem(LEGACY_STORAGE_KEY)
-    if (legacyRaw) {
-      const legacy = JSON.parse(legacyRaw)
-      if (legacy?.role) {
-        const goal = normalizeGoal(legacy, 0)
-        return { goals: [goal], activeGoalId: goal.id }
-      }
-    }
-  } catch {
-    // Fall through to the demo default below.
-  }
-
-  const goal = normalizeGoal({ role: 'Backend Developer' }, 0)
-  return { goals: [goal], activeGoalId: goal.id }
+export async function getCareerGoals() {
+  const goals = await apiClient.get('/career/goals/')
+  const mapped = goals.map(mapGoal)
+  const activeGoal = mapped.find((g) => g.isPrimary) ?? mapped[0] ?? null
+  return { goals: mapped, activeGoalId: activeGoal?.id ?? null }
 }
 
-function persistGoals(state) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+export async function updateCareerGoal(goal, goalId) {
+  const payload = {}
+  if (goal.role) payload.role = goal.role
+  if (goal.level) payload.level = goal.level
+  if (goal.timeline) payload.timeline = goal.timeline
+  // The write serializer only returns {role, level, timeline} - missing id,
+  // is_primary, domain, etc. Re-fetch the full (read-serializer) list
+  // afterward rather than trusting that partial response.
+  await apiClient.patch(`/career/goals/${goalId}/`, payload)
+  const { goals } = await getCareerGoals()
+  return goals.find((g) => g.id === goalId) ?? null
 }
 
-export function getCareerGoals() {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(readStoredGoals()), SIMULATED_LATENCY_MS)
-  })
+export async function addCareerGoal(goal) {
+  const payload = { role: goal.role }
+  if (goal.level) payload.level = goal.level
+  if (goal.timeline) payload.timeline = goal.timeline
+  // Same issue as updateCareerGoal - the create response is missing id,
+  // so match the newly-created goal by role name after refetching.
+  await apiClient.post('/career/goals/', payload)
+  const { goals } = await getCareerGoals()
+  const match = goals.find((g) => g.role.toLowerCase() === goal.role.toLowerCase())
+  return match ?? goals[goals.length - 1] ?? null
 }
 
-export function updateCareerGoal(goal, goalId) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      try {
-        const state = readStoredGoals()
-        const id = goalId || state.activeGoalId
-        const existingIndex = state.goals.findIndex((item) => item.id === id)
-        if (existingIndex < 0) throw new Error('Career goal not found.')
-
-        const duplicate = state.goals.some(
-          (item, index) => index !== existingIndex && item.role === getCareerRole(goal.role).name,
-        )
-        if (duplicate) throw new Error('That career is already one of your goals.')
-
-        const normalized = normalizeGoal({ ...goal, id }, existingIndex)
-        const goals = state.goals.map((item) => (item.id === id ? normalized : item))
-        persistGoals({ goals, activeGoalId: state.activeGoalId })
-        resolve(normalized)
-      } catch (error) {
-        reject(error)
-      }
-    }, SIMULATED_LATENCY_MS)
-  })
+export async function removeCareerGoal(goalId) {
+  await apiClient.delete(`/career/goals/${goalId}/`)
+  return getCareerGoals()
 }
 
-export function addCareerGoal(goal) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      try {
-        const state = readStoredGoals()
-        if (state.goals.length >= 2) throw new Error('You can have up to two career goals.')
-
-        const role = getCareerRole(goal.role)
-        if (state.goals.some((item) => item.role === role.name)) {
-          throw new Error('That career is already one of your goals.')
-        }
-
-        const normalized = normalizeGoal({ ...goal, id: `goal-${Date.now()}` }, state.goals.length)
-        const goals = [...state.goals, normalized]
-        persistGoals({ goals, activeGoalId: state.activeGoalId })
-        resolve(normalized)
-      } catch (error) {
-        reject(error)
-      }
-    }, SIMULATED_LATENCY_MS)
-  })
+export async function setActiveCareerGoal(goalId) {
+  await apiClient.post(`/career/goals/${goalId}/activate/`, {})
+  return getCareerGoals()
 }
 
-export function removeCareerGoal(goalId) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      try {
-        const state = readStoredGoals()
-        if (state.goals.length <= 1) throw new Error('At least one career goal must remain.')
-
-        const goals = state.goals.filter((goal) => goal.id !== goalId)
-        if (goals.length === state.goals.length) throw new Error('Career goal not found.')
-
-        const activeGoalId = goals.some((goal) => goal.id === state.activeGoalId)
-          ? state.activeGoalId
-          : goals[0].id
-        persistGoals({ goals, activeGoalId })
-        resolve({ goals, activeGoalId })
-      } catch (error) {
-        reject(error)
-      }
-    }, SIMULATED_LATENCY_MS)
-  })
-}
-
-export function setActiveCareerGoal(goalId) {
-  const state = readStoredGoals()
-  if (!state.goals.some((goal) => goal.id === goalId)) {
-    throw new Error('Career goal not found.')
-  }
-  const nextState = { ...state, activeGoalId: goalId }
-  persistGoals(nextState)
-  return nextState
-}
-
-export function getCareerGoal() {
-  return getCareerGoals().then(({ goals, activeGoalId }) => (
-    goals.find((goal) => goal.id === activeGoalId) ?? goals[0] ?? null
-  ))
+export async function getCareerGoal() {
+  const { goals, activeGoalId } = await getCareerGoals()
+  return goals.find((g) => g.id === activeGoalId) ?? goals[0] ?? null
 }
 
 export function clearCareerGoal() {
-  window.localStorage.removeItem(STORAGE_KEY)
-  window.localStorage.removeItem(LEGACY_STORAGE_KEY)
+  // No-op now that goals are backend-persisted, not localStorage-based.
+  // Kept as a no-op (rather than removed) in case something still calls it.
 }
 
-export function getCareerRoles() {
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(careerRoles), SIMULATED_LATENCY_MS)
-  })
+export async function getCareerRoles() {
+  const roles = await apiClient.get('/career/roles/')
+  return roles.map((r) => ({
+    name: r.name,
+    slug: r.slug,
+    domain: r.domain,
+    description: r.description,
+    // real per-skill requirements: [{skill_id, skill, category, importance, target_level, is_required}]
+    competencies: r.competencies,
+  }))
 }

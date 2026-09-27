@@ -69,8 +69,9 @@ export function CareerGoalProvider({ children }) {
     setRevision((value) => value + 1)
   }, [])
 
-  const selectCareerGoal = useCallback((goalId) => {
-    const result = persistActiveCareerGoal(goalId)
+  const selectCareerGoal = useCallback(async (goalId) => {
+    const result = await persistActiveCareerGoal(goalId)
+    setCareerGoals(result.goals)
     setActiveGoalId(result.activeGoalId)
     setRevision((value) => value + 1)
   }, [])
