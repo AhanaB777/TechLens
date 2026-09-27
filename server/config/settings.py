@@ -15,9 +15,14 @@ import os
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = BASE_DIR.parent
+
+load_dotenv(PROJECT_ROOT / '.env.local')
+load_dotenv(PROJECT_ROOT / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -104,19 +109,14 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
 _database_url = os.getenv('DATABASE_URL')
-if _database_url:
-    DATABASES = {
-        'default': dj_database_url.parse(_database_url, conn_max_age=600),
-    }
-elif DEBUG:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
-else:
-    raise ImproperlyConfigured('Set DATABASE_URL when DEBUG is disabled.')
+if not _database_url:
+    raise ImproperlyConfigured('Set DATABASE_URL to a PostgreSQL connection URL.')
+
+DATABASES = {
+    'default': dj_database_url.parse(_database_url, conn_max_age=600),
+}
+if DATABASES['default']['ENGINE'] != 'django.db.backends.postgresql':
+    raise ImproperlyConfigured('DATABASE_URL must use PostgreSQL; SQLite is not supported.')
 
 # Password validation
 # https://docs.djangoproject.com/en/6.1/ref/settings/#auth-password-validators
